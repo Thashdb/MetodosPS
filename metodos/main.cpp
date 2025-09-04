@@ -1,6 +1,13 @@
-#include "user_interface/menu.hpp"
+#include <iostream>
+#include "view/MainInterface.h"
+#include "view/UserInterface.h"
 
 int main() {
-    mostrarMenu();
+    std::cout << "Sistema Iniciado!" << std::endl;
+
+    MainInterface mainUI;
+    mainUI.menu();
+
     return 0;
 }
+
