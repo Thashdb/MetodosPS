@@ -10,8 +10,8 @@ private:
 public:
     User(std::string u = "", std::string p = "") : username(u), password(p) {}
 
-    std::string getUsername() { return username; }
-    std::string getPassword() { return password; }
+    std::string getUsername() const { return username; }
+    std::string getPassword() const { return password; }
 };
 
 #endif
