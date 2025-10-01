@@ -1,0 +1,5 @@
+1:
+g++ -std=c++17 -Iinclude src/core/secao.cpp src/admissional/dadosAdmissionais.cpp src/dadosPessoais/contatos.cpp src/dadosPessoais/dependentes.cpp src/documentos/rg.cpp src/documentos/cpf.cpp  main.cpp -o bin\lab4.exe
+
+2:
+.\bin\lab4.exe
