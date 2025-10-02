@@ -8,7 +8,7 @@ private:
     std::string nome;
 public:
     Atividade(std::string n = "") : nome(n) {}
-    std::string getNome() { return nome; }
+    std::string getNome() const { return nome; }
 };
 
 #endif
