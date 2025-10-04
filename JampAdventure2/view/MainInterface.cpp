@@ -2,6 +2,10 @@
 #include "UserInterface.h"
 #include "ActivityInterface.h"
 
+
+#include "../data/factory/IDaoFactory.h"
+#include "../data/factory/RamDaoFactory.h"
+#include "../data/factory/BinaryFileDaoFactory.h"
 #include "../data/UserRepository.h"
 #include "../data/BinaryFileUserRepository.h"
 #include "../data/ActivityRepository.h"
@@ -24,17 +28,33 @@ void MainInterface::menu() {
     std::cout << "Sistema Iniciado!\n";
 
     // Escolhe persistencia de USUARIOS uma vez
-    std::unique_ptr<IUserRepository> userRepo;
+    // std::unique_ptr<IUserRepository> userRepo;
+    // {
+    //     std::cout << "Persistencia de usuarios [1-RAM / 2-Arquivo binario]: " << std::flush;
+    //     int modo = 1; if (!(std::cin >> modo)) { limpa(); modo = 1; } limpa();
+    //     if (modo == 2) userRepo = std::make_unique<BinaryFileUserRepository>("usuarios.bin");
+    //     else           userRepo = std::make_unique<UserRepository>();
+    // }
+    // ActivityRepository activityRepo; // atividades em RAM (id auto)
+    
+    std::unique_ptr<IDaoFactory> daoFactory;
     {
         std::cout << "Persistencia de usuarios [1-RAM / 2-Arquivo binario]: " << std::flush;
         int modo = 1; if (!(std::cin >> modo)) { limpa(); modo = 1; } limpa();
-        if (modo == 2) userRepo = std::make_unique<BinaryFileUserRepository>("usuarios.bin");
-        else           userRepo = std::make_unique<UserRepository>();
+        if (modo == 2) {
+            daoFactory = std::make_unique<BinaryFileDaoFactory>();
+        } else {
+            daoFactory = std::make_unique<RamDaoFactory>();
+        }
     }
 
-    ActivityRepository activityRepo; // atividades em RAM (id auto)
+     // A fábrica cria os DAOs. A MainInterface não sabe quais são as classes concretas.
+    auto userRepo = daoFactory->createUserDao();
+    auto activityRepo = daoFactory->createActivityDao();
+    
+    
     auto& facade = FacadeSingletonController::instance();
-    facade.wire(userRepo.get(), &activityRepo);
+    facade.wire(userRepo.get(), activityRepo.get());
 
     for (;;) {
         std::cout << "\n=== Menu ===\n"
