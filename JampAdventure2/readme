@@ -1,0 +1,50 @@
+/business
+    /model
+        /user
+            - guarda dados(id, nome de usuário e senha) -> sem lógica
+            - inclui papel do usuario: instrutor ou usuario comum (lab3)
+        /Activity
+            - nova entidade (id, nome, data, hora, categoria, nome do instruto, participantes[])
+    /controllers
+        /UserController
+            - adicionar e listar usuarios (lab1)
+            - aplica Validation, (lab2)
+            - adiciona role de usuario e login (lab3)
+        /activityController
+            - CRUD de atividade (lab3) e inscricao
+        /FacadeSingletonController
+            - fachada única dos gerentes e método de contagem (lab3)
+    /service
+        /Validation
+            - declara as funções de validação. O UserController chama estas funções e, se algo estiver errado, elas chamam as exceções (lab2)
+/data
+    /UserRepository
+        - mantém a coleção de usuários na memória com vetor (lab1)
+        - tem operações básicas: addUser, listAll, nextID (lab1)
+        - base para o login em memória (lab3)
+    /IUserRepository
+        - duas implementações (RAM/Arquivo) trocáveis sem alterar controller (lab2)
+        - login por nome de usuario (lab3)
+    /BinaryFileUserRepository
+        - armazena usuario em arquivo binario (lab2)
+    /ActivityRepository
+        - armazena as atividades e suas inscrições (lab3)
+
+
+/view
+    /UserInterface
+        - menus, leitura(cadastro) e impressão (lab1)
+            - chama UserController, mostra mensagens de erro capturando exceções (lab2)
+        - contato com o UserController para criar e listar usuários
+    /MainInterface
+        - menu principal
+        - pergunta se eh para escrever na RAM ou em um arquivo binario (lab2)
+    /ActivityInterface
+        - CRUD de atividades pelo instrulor (lab3)
+
+/infra
+    /error
+        /ExceptionLogin
+            - exceção específica para erros de login (lab2)
+        /ExceptionPassword
+            - exceção específica para erros de senha (lab2)
