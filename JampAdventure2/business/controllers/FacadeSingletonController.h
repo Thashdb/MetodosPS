@@ -4,10 +4,14 @@
 #include "UserController.h"
 #include "ActivityController.h"
 #include "../report/ReportFormat.h"
+#include "../observer/NotificationCenter.h"
+#include "../observer/UserNotificationObserver.h"
+#include "../observer/LoggerNotificationObserver.h"
 #include "../../data/IUserRepository.h"
 #include "../../data/ActivityRepository.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 class ICommand;
 class ILogger;
@@ -24,6 +28,9 @@ public:
     bool execute(ICommand& command);
 
     std::string generateActivityReport(ReportFormat format);
+
+    NotificationCenter& notifications();
+    std::vector<std::string> consumeNotifications(const std::string& username);
 
     // Acesso aos controllers
     UserController& user();
@@ -45,6 +52,10 @@ private:
     std::unique_ptr<ActivityController> activityCtl_;
 
     ILogger* logger_{nullptr};
+
+    NotificationCenter notificationCenter_;
+    std::unique_ptr<UserNotificationObserver> userNotificationObserver_;
+    std::unique_ptr<LoggerNotificationObserver> loggerNotificationObserver_;
 };
 
 #endif

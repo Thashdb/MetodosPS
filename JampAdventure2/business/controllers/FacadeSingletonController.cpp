@@ -17,11 +17,30 @@ void FacadeSingletonController::wire(IUserRepository* userRepo, ActivityReposito
     activityRepo_ = activityRepo;
 
     userCtl_     = std::make_unique<UserController>(*userRepo_);
-    activityCtl_ = std::make_unique<ActivityController>(*activityRepo_);
+    activityCtl_ = std::make_unique<ActivityController>(*activityRepo_, &notificationCenter_);
+    activityCtl_->setNotificationCenter(&notificationCenter_);
+
+    if (!userNotificationObserver_) {
+        userNotificationObserver_ = std::make_unique<UserNotificationObserver>();
+        notificationCenter_.attach(userNotificationObserver_.get());
+    }
+
+    if (!loggerNotificationObserver_) {
+        loggerNotificationObserver_ = std::make_unique<LoggerNotificationObserver>(logger_);
+        notificationCenter_.attach(loggerNotificationObserver_.get());
+    } else {
+        loggerNotificationObserver_->setLogger(logger_);
+    }
 }
 
 void FacadeSingletonController::setLogger(ILogger* logger) {
     logger_ = logger;
+    if (loggerNotificationObserver_) {
+        loggerNotificationObserver_->setLogger(logger_);
+    } else {
+        loggerNotificationObserver_ = std::make_unique<LoggerNotificationObserver>(logger_);
+        notificationCenter_.attach(loggerNotificationObserver_.get());
+    }
 }
 
 bool FacadeSingletonController::execute(ICommand& command) {
@@ -59,6 +78,15 @@ std::string FacadeSingletonController::generateActivityReport(ReportFormat forma
     }
 
     return output;
+}
+
+NotificationCenter& FacadeSingletonController::notifications() {
+    return notificationCenter_;
+}
+
+std::vector<std::string> FacadeSingletonController::consumeNotifications(const std::string& username) {
+    if (!userNotificationObserver_) return {};
+    return userNotificationObserver_->consume(username);
 }
 
 UserController& FacadeSingletonController::user() {

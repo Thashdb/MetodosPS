@@ -5,13 +5,41 @@
 #include "../business/command/RemoveActivityCommand.h"
 #include "../business/command/EnrollUserCommand.h"
 #include "../business/command/UndoActivityUpdateCommand.h"
+#include "../business/strategy/CategoryFilterStrategy.h"
+#include "../business/strategy/DateFilterStrategy.h"
+#include "../business/strategy/InstructorFilterStrategy.h"
+#include "../business/model/Activity.h"
 
 #include <iostream>
 #include <limits>
+#include <memory>
+#include <vector>
 
-static void limpa() {
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+namespace {
+    void limpa() {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+
+    void printActivities(const std::vector<Activity>& list) {
+        if (list.empty()) {
+            std::cout << "(sem atividades)\n";
+            return;
+        }
+        for (const auto& a : list) {
+            std::cout << " [" << a.id << "] " << a.name
+                      << " - " << a.date << " " << a.time
+                      << " - " << a.category
+                      << " (instrutor: " << a.instructorUsername << ")\n";
+            if (!a.participants.empty()) {
+                std::cout << "   inscritos: ";
+                for (size_t i = 0; i < a.participants.size(); ++i) {
+                    std::cout << a.participants[i]
+                              << (i + 1 < a.participants.size() ? ", " : "\n");
+                }
+            }
+        }
+    }
 }
 
 ActivityInterface::ActivityInterface(std::string username, UserRole role)
@@ -27,7 +55,9 @@ void ActivityInterface::menu() {
                     << "3) (Instrutor) Remover atividade\n"
                     << "4) (Comum) Inscrever-se em atividade\n"
                     << "5) Listar atividades\n"
-                    << "6) (Instrutor) Desfazer ultima atualizacao\n"
+                    << "6) Filtrar atividades\n"
+                    << "7) (Instrutor) Desfazer ultima atualizacao\n"
+                    << "8) Minhas notificacoes\n"
                     << "0) Voltar\n"
                     << "Logado como: " << currentUser_
                     << (currentRole_==UserRole::Instructor ? " [Instrutor]\n" : " [Comum]\n")
@@ -72,25 +102,63 @@ void ActivityInterface::menu() {
             bool ok = facade.execute(cmd);
             std::cout << (ok ? "Inscricao realizada!\n" : "Falha na inscricao.\n");
         } else if (op == 5) {
-            const auto& list = facade.activity().listAll();
-            if (list.empty()) { std::cout << "(sem atividades)\n"; continue; }
-            for (const auto& a : list) {
-                std::cout << " [" << a.id << "] " << a.name
-                          << " - " << a.date << " " << a.time
-                          << " - " << a.category
-                          << " (instrutor: " << a.instructorUsername << ")\n";
-                if (!a.participants.empty()) {
-                    std::cout << "   inscritos: ";
-                    for (size_t i=0;i<a.participants.size();++i) {
-                        std::cout << a.participants[i] << (i+1<a.participants.size()? ", ":"\n");
-                    }
-                }
-            }
+            printActivities(facade.activity().listAll());
         } else if (op == 6) {
+            std::cout << "\n-- Filtros --\n"
+                      << "1) Categoria\n"
+                      << "2) Data\n"
+                      << "3) Instrutor\n"
+                      << "0) Cancelar\n"
+                      << "Escolha: " << std::flush;
+            int filtro;
+            if (!(std::cin >> filtro)) { limpa(); std::cout << "Opcao invalida.\n"; continue; }
+            limpa();
+
+            if (filtro == 0) continue;
+
+            std::unique_ptr<IActivityFilterStrategy> strategy;
+            std::string valor;
+            if (filtro == 1) {
+                std::cout << "Categoria: "; std::getline(std::cin, valor);
+                strategy = std::make_unique<CategoryFilterStrategy>(valor);
+            } else if (filtro == 2) {
+                std::cout << "Data (YYYY-MM-DD): "; std::getline(std::cin, valor);
+                strategy = std::make_unique<DateFilterStrategy>(valor);
+            } else if (filtro == 3) {
+                std::cout << "Instrutor: "; std::getline(std::cin, valor);
+                strategy = std::make_unique<InstructorFilterStrategy>(valor);
+            } else {
+                std::cout << "Opcao invalida.\n";
+                continue;
+            }
+
+            if (valor.empty()) {
+                std::cout << "O valor do filtro nao pode ser vazio.\n";
+                continue;
+            }
+
+            auto filtered = facade.activity().filter(*strategy);
+            if (filtered.empty()) {
+                std::cout << "Nenhuma atividade encontrada para o filtro de "
+                          << strategy->description() << ".\n";
+            } else {
+                printActivities(filtered);
+            }
+        } else if (op == 7) {
             if (currentRole_ != UserRole::Instructor) { std::cout << "Apenas instrutor pode desfazer atualizacao.\n"; continue; }
             UndoActivityUpdateCommand cmd;
             bool ok = facade.execute(cmd);
             std::cout << (ok ? "Ultima atualizacao desfeita!\n" : "Nada para desfazer.\n");
+        } else if (op == 8) {
+            auto notifications = facade.consumeNotifications(currentUser_);
+            if (notifications.empty()) {
+                std::cout << "Nenhuma notificacao pendente.\n";
+            } else {
+                std::cout << "\n--- Minhas notificacoes ---\n";
+                for (const auto& msg : notifications) {
+                    std::cout << "- " << msg << '\n';
+                }
+            }
         } else {
             std::cout << "Opcao invalida.\n";
         }
