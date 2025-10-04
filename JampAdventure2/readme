@@ -51,13 +51,13 @@ Resumo dos Arquivos
             - Observador que envia notificações específicas para usuários (projeto final)
     /report
         /ActivityHtmlReport
-            - Gera relatórios de atividades no formato HTML (lab2)
+            - Gera relatórios de atividades no formato HTML (lab4)
         /ActivityReportTemplate
-            - Define o template base para relatórios de atividades (lab2)
+            - Define o template base para relatórios de atividades (lab4)
         /ActivityTextReport
-            - Gera relatórios de atividades no formato texto simples (lab2)
+            - Gera relatórios de atividades no formato texto simples (lab4)
         /ReportFormat
-            - Enumeração que define os formatos disponíveis para relatórios (lab2)
+            - Enumeração que define os formatos disponíveis para relatórios (lab4)
     /service
         /Validation
             - declara as funções de validação. O UserController chama estas funções e, se algo estiver errado, elas chamam as exceções (lab2)
@@ -84,11 +84,11 @@ Resumo dos Arquivos
         - armazena as atividades e suas inscrições (lab3)
     /factory
         /BinaryFileDaoFactory
-            - Fabrica que cria DAOs para persistência em arquivos binários (lab2)
+            - Fabrica que cria DAOs para persistência em arquivos binários (lab4)
         /IDaoFactory
-            - Interface base para todas as fábricas de DAOs (lab2)
+            - Interface base para todas as fábricas de DAOs (lab4)
         /RamDaoFactory
-            - Fabrica que cria DAOs para persistência em memória RAM (lab2)
+            - Fabrica que cria DAOs para persistência em memória RAM (lab4)
 
 /infra
     /error
@@ -98,11 +98,11 @@ Resumo dos Arquivos
             - exceção específica para erros de senha (lab2)
     /log
         /ILogger
-            - Interface para implementação de loggers (lab2)
+            - Interface para implementação de loggers (lab4)
         /LegacyLogger
-            - Implementação antiga de logger (lab2)
+            - Implementação antiga de logger (lab4)
         /LegacyLoggerAdapter
-            - Adaptador para integrar o LegacyLogger com a nova interface ILogger (lab2)
+            - Adaptador para integrar o LegacyLogger com a nova interface ILogger (lab4)
 
 /view
     /UserInterface
