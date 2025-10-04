@@ -4,6 +4,7 @@
 #include "../../data/ActivityRepository.h"
 #include "../model/Activity.h"
 #include "../model/User.h"
+#include "../memento/ActivityCaretaker.h"
 
 #include <vector>
 #include <string>
@@ -26,7 +27,11 @@ class ActivityController {
         // Inscrição (usuário comum)
         bool enrollUser(int activityId, std::string username, UserRole role);
 
+        // Memento - desfaz a última atualização
+        bool undoLastUpdate();
+
     private:
         ActivityRepository& repo_;
+        ActivityCaretaker caretaker_;
 };
 #endif

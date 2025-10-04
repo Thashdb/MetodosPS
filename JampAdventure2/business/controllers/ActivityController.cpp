@@ -1,4 +1,7 @@
 #include "ActivityController.h"
+#include "../memento/ActivityMemento.h"
+
+#include <utility>
 
 ActivityController::ActivityController(ActivityRepository& repo) : repo_(repo) {}
 
@@ -19,14 +22,22 @@ bool ActivityController::create(std::string name, std::string date, std::string 
 
 bool ActivityController::update(int id, std::string name, std::string date, std::string time,
                                 std::string category, std::string instructorUsername) {
-    Activity a;
-    a.id = id;
-    a.name = std::move(name);
-    a.date = std::move(date);
-    a.time = std::move(time);
-    a.category = std::move(category);
-    a.instructorUsername = std::move(instructorUsername);
-    return repo_.update(id, a);
+    const Activity* current = repo_.findById(id);
+    if (!current) return false;
+
+    Activity previous = *current; // snapshot antes da atualização
+    Activity updated = previous;
+    updated.name = std::move(name);
+    updated.date = std::move(date);
+    updated.time = std::move(time);
+    updated.category = std::move(category);
+    updated.instructorUsername = std::move(instructorUsername);
+
+    const bool ok = repo_.update(id, updated);
+    if (ok) {
+        caretaker_.save(ActivityMemento(std::move(previous)));
+    }
+    return ok;
 }
 
 bool ActivityController::erase(int id, std::string instructorUsername) {
@@ -47,4 +58,13 @@ bool ActivityController::enrollUser(int activityId, std::string username, UserRo
     if (role != UserRole::Common) return false; // somente usuários comuns se inscrevem
     if (username.empty()) return false;
     return repo_.enroll(activityId, username);
+}
+
+bool ActivityController::undoLastUpdate() {
+    if (!caretaker_.hasSnapshot()) return false;
+    const ActivityMemento* snapshot = caretaker_.peek();
+    if (!snapshot) return false;
+    const bool restored = repo_.restore(snapshot->state());
+    if (restored) caretaker_.clear();
+    return restored;
 }

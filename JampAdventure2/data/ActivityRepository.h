@@ -14,6 +14,9 @@ class ActivityRepository {
         int  nextId() const;
         size_t count() const;
 
+        const Activity* findById(int id) const;
+        bool restore(const Activity& snapshot);
+
         // Inscrição de usuário comum
         bool enroll(int activityId, const std::string& username);
     private:

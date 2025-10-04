@@ -14,6 +14,7 @@ bool ActivityRepository::update(int id, const Activity& a) {
             it.time = a.time;
             it.category = a.category;
             it.instructorUsername = a.instructorUsername;
+            it.participants = a.participants;
             return true;
         }
     }
@@ -38,6 +39,23 @@ int ActivityRepository::nextId() const {
 
 size_t ActivityRepository::count() const {
     return store_.size();
+}
+
+const Activity* ActivityRepository::findById(int id) const {
+    for (const auto& it : store_) {
+        if (it.id == id) return &it;
+    }
+    return nullptr;
+}
+
+bool ActivityRepository::restore(const Activity& snapshot) {
+    for (auto& it : store_) {
+        if (it.id == snapshot.id) {
+            it = snapshot;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool ActivityRepository::enroll(int activityId, const std::string& username) {

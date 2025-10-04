@@ -1,5 +1,10 @@
 #include "ActivityInterface.h"
 #include "../business/controllers/FacadeSingletonController.h"
+#include "../business/command/CreateActivityCommand.h"
+#include "../business/command/UpdateActivityCommand.h"
+#include "../business/command/RemoveActivityCommand.h"
+#include "../business/command/EnrollUserCommand.h"
+#include "../business/command/UndoActivityUpdateCommand.h"
 
 #include <iostream>
 #include <limits>
@@ -22,6 +27,7 @@ void ActivityInterface::menu() {
                     << "3) (Instrutor) Remover atividade\n"
                     << "4) (Comum) Inscrever-se em atividade\n"
                     << "5) Listar atividades\n"
+                    << "6) (Instrutor) Desfazer ultima atualizacao\n"
                     << "0) Voltar\n"
                     << "Logado como: " << currentUser_
                     << (currentRole_==UserRole::Instructor ? " [Instrutor]\n" : " [Comum]\n")
@@ -39,7 +45,8 @@ void ActivityInterface::menu() {
             std::cout << "Data (YYYY-MM-DD): "; std::getline(std::cin, date);
             std::cout << "Hora (HH:MM): "; std::getline(std::cin, time);
             std::cout << "Categoria: "; std::getline(std::cin, cat);
-            bool ok = facade.activity().create(name, date, time, cat, currentUser_);
+            CreateActivityCommand cmd{name, date, time, cat, currentUser_};
+            bool ok = facade.execute(cmd);
             std::cout << (ok ? "Atividade criada!\n" : "Falha ao criar.\n");
         } else if (op == 2) {
             if (currentRole_ != UserRole::Instructor) { std::cout << "Apenas instrutor pode editar.\n"; continue; }
@@ -49,17 +56,20 @@ void ActivityInterface::menu() {
             std::cout << "Nova data (YYYY-MM-DD): "; std::getline(std::cin, date);
             std::cout << "Nova hora (HH:MM): "; std::getline(std::cin, time);
             std::cout << "Nova categoria: "; std::getline(std::cin, cat);
-            bool ok = facade.activity().update(id, name, date, time, cat, currentUser_);
+            UpdateActivityCommand cmd{id, name, date, time, cat, currentUser_};
+            bool ok = facade.execute(cmd);
             std::cout << (ok ? "Atividade atualizada!\n" : "Falha ao atualizar.\n");
         } else if (op == 3) {
             if (currentRole_ != UserRole::Instructor) { std::cout << "Apenas instrutor pode remover.\n"; continue; }
             int id; std::cout << "ID da atividade: "; std::cin >> id; limpa();
-            bool ok = facade.activity().erase(id, currentUser_);
+            RemoveActivityCommand cmd{id, currentUser_};
+            bool ok = facade.execute(cmd);
             std::cout << (ok ? "Atividade removida!\n" : "Falha ao remover.\n");
         } else if (op == 4) {
             if (currentRole_ != UserRole::Common) { std::cout << "Apenas usuario comum pode se inscrever.\n"; continue; }
             int id; std::cout << "ID da atividade: "; std::cin >> id; limpa();
-            bool ok = facade.activity().enrollUser(id, currentUser_, UserRole::Common);
+            EnrollUserCommand cmd{id, currentUser_, UserRole::Common};
+            bool ok = facade.execute(cmd);
             std::cout << (ok ? "Inscricao realizada!\n" : "Falha na inscricao.\n");
         } else if (op == 5) {
             const auto& list = facade.activity().listAll();
@@ -76,6 +86,11 @@ void ActivityInterface::menu() {
                     }
                 }
             }
+        } else if (op == 6) {
+            if (currentRole_ != UserRole::Instructor) { std::cout << "Apenas instrutor pode desfazer atualizacao.\n"; continue; }
+            UndoActivityUpdateCommand cmd;
+            bool ok = facade.execute(cmd);
+            std::cout << (ok ? "Ultima atualizacao desfeita!\n" : "Nada para desfazer.\n");
         } else {
             std::cout << "Opcao invalida.\n";
         }

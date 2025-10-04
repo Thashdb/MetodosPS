@@ -1,0 +1,84 @@
+@startuml
+
+package "Command" {
+    interface ICommand {
+        +execute(facade: FacadeSingletonController) : bool
+        +name() : string
+    }
+
+    class RegisterUserCommand
+    class CreateActivityCommand
+    class UpdateActivityCommand
+    class RemoveActivityCommand
+    class EnrollUserCommand
+    class UndoActivityUpdateCommand
+
+    ICommand <|.. RegisterUserCommand
+    ICommand <|.. CreateActivityCommand
+    ICommand <|.. UpdateActivityCommand
+    ICommand <|.. RemoveActivityCommand
+    ICommand <|.. EnrollUserCommand
+    ICommand <|.. UndoActivityUpdateCommand
+}
+
+package "Facade" {
+    class FacadeSingletonController {
+        +wire(userRepo: IUserRepository*, activityRepo: ActivityRepository*)
+        +setLogger(logger: ILogger*)
+        +execute(command: ICommand) : bool
+        +generateActivityReport(format: ReportFormat) : string
+        +user() : UserController
+        +activity() : ActivityController
+    }
+}
+
+package "Memento" {
+    class ActivityMemento {
+        -state: Activity
+    }
+    class ActivityCaretaker {
+        -lastMemento: ActivityMemento
+        +save(m: ActivityMemento)
+        +hasSnapshot() : bool
+        +peek() : ActivityMemento*
+        +clear()
+    }
+    ActivityCaretaker --> ActivityMemento : agrega
+}
+
+package "Report (Template Method)" {
+    abstract class ActivityReportTemplate {
+        +generate(users: User[], activities: Activity[]) : string
+        #renderHeader(stats)
+        #renderActivity(activity, index)
+        #renderFooter(stats)
+        #separator()
+    }
+    class ActivityHtmlReport
+    class ActivityTextReport
+    ActivityReportTemplate <|-- ActivityHtmlReport
+    ActivityReportTemplate <|-- ActivityTextReport
+}
+
+package "Adapter" {
+    interface ILogger {
+        +info(msg: string)
+        +warn(msg: string)
+        +error(msg: string)
+    }
+    class LegacyLogger {
+        +writeLog(severity: string, message: string)
+    }
+    class LegacyLoggerAdapter
+    ILogger <|.. LegacyLoggerAdapter
+    LegacyLoggerAdapter --> LegacyLogger : adapta
+}
+
+FacadeSingletonController --> UserController
+FacadeSingletonController --> ActivityController
+ActivityController --> ActivityRepository
+ActivityController --> ActivityCaretaker
+FacadeSingletonController --> ILogger
+FacadeSingletonController ..> ICommand : executa
+
+@enduml

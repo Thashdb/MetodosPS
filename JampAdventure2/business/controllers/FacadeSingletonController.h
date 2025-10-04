@@ -3,8 +3,14 @@
 
 #include "UserController.h"
 #include "ActivityController.h"
+#include "../report/ReportFormat.h"
 #include "../../data/IUserRepository.h"
 #include "../../data/ActivityRepository.h"
+#include <memory>
+#include <string>
+
+class ICommand;
+class ILogger;
 
 // Singleton + Facade: expõe uma "porta" única para os gerentes
 class FacadeSingletonController {
@@ -13,6 +19,11 @@ public:
 
     // Injeta os repos e constrói os controllers (chamar uma vez no início)
     void wire(IUserRepository* userRepo, ActivityRepository* activityRepo);
+    void setLogger(ILogger* logger);
+
+    bool execute(ICommand& command);
+
+    std::string generateActivityReport(ReportFormat format);
 
     // Acesso aos controllers
     UserController& user();
@@ -30,8 +41,10 @@ private:
     ActivityRepository* activityRepo_{nullptr};
 
     // alocados após wire()
-    UserController* userCtl_{nullptr};
-    ActivityController* activityCtl_{nullptr};
+    std::unique_ptr<UserController> userCtl_;
+    std::unique_ptr<ActivityController> activityCtl_;
+
+    ILogger* logger_{nullptr};
 };
 
 #endif

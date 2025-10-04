@@ -12,6 +12,10 @@
 #include "../business/controllers/FacadeSingletonController.h"
 #include "../business/controllers/UserController.h"
 #include "../business/model/User.h"
+#include "../business/command/RegisterUserCommand.h"
+#include "../business/report/ReportFormat.h"
+#include "../infra/log/LegacyLogger.h"
+#include "../infra/log/LegacyLoggerAdapter.h"
 
 #include <iostream>
 #include <limits>
@@ -56,12 +60,18 @@ void MainInterface::menu() {
     auto& facade = FacadeSingletonController::instance();
     facade.wire(userRepo.get(), activityRepo.get());
 
+    LegacyLogger legacyLogger("app.log");
+    LegacyLoggerAdapter loggerAdapter(legacyLogger);
+    facade.setLogger(&loggerAdapter);
+
     for (;;) {
         std::cout << "\n=== Menu ===\n"
                     << "1) Cadastrar-se\n"
                     << "2) Fazer login\n"
                     << "3) Listar atividades cadastradas\n"
                     << "4) Total de entidades (usuarios + atividades)\n"
+                    << "5) Relatorio HTML de atividades\n"
+                    << "6) Relatorio Texto de atividades\n"
                     << "0) Sair\n"
                     << "Escolha: " << std::flush;
 
@@ -81,7 +91,8 @@ void MainInterface::menu() {
             UserRole role = (papel == 1 ? UserRole::Instructor : UserRole::Common);
 
             try {
-                bool ok = facade.user().registerUser(username, password, role);
+                RegisterUserCommand cmd{username, password, role};
+                bool ok = facade.execute(cmd);
                 std::cout << (ok ? "Cadastro realizado!\n" : "Falha: usuario ja existe ou dados invalidos.\n");
             } catch (const std::exception& e) {
                 std::cout << "Erro: " << e.what() << "\n";
@@ -119,6 +130,22 @@ void MainInterface::menu() {
         } else if (op == 4) {
             // TOTAL DE ENTIDADES
             std::cout << "Total: " << facade.countEntities() << "\n";
+
+        } else if (op == 5) {
+            try {
+                const auto report = facade.generateActivityReport(ReportFormat::Html);
+                std::cout << "\n--- RELATORIO HTML ---\n" << report << "\n";
+            } catch (const std::exception& e) {
+                std::cout << "Erro ao gerar relatorio: " << e.what() << "\n";
+            }
+
+        } else if (op == 6) {
+            try {
+                const auto report = facade.generateActivityReport(ReportFormat::Text);
+                std::cout << "\n--- RELATORIO TEXTO ---\n" << report << "\n";
+            } catch (const std::exception& e) {
+                std::cout << "Erro ao gerar relatorio: " << e.what() << "\n";
+            }
 
         } else {
             std::cout << "Opcao invalida.\n";
