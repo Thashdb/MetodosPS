@@ -1,3 +1,11 @@
+Compilar
+    g++ -std=c++17 -Wall -Wextra -O2 ".\main.cpp" ".\view\MainInterface.cpp" ".\view\UserInterface.cpp" ".\view\ActivityInterface.cpp" ".\business\controllers\UserController.cpp" ".\business\controllers\ActivityController.cpp" ".\business\controllers\FacadeSingletonController.cpp" ".\business\service\Validation.cpp" ".\data\UserRepository.cpp" ".\data\BinaryFileUserRepository.cpp" ".\data\ActivityRepository.cpp" -o ".\app.exe"
+    ./app.exe
+
+
+
+Resumo dos Arquivos
+
 /business
     /model
         /user
